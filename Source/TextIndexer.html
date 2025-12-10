@@ -8,42 +8,62 @@
 	<p>
 		Load or paste a text document, then click the Generate Index button.
 		Once the index is generated, enter search terms and click the Find button
-		to locate lines that contain all the specified search terms.
+		to locate lines that contain all the specified search terms.  A sample
+		text document is provided
+		<a href="../Data/Holy_Bible,_The-King_James_Version.txt">at this link</a>.
 	</p>
 
 	<div>
-		<label>Text Document to Index:</label>
-		<br />
+		<div>
+			<label>Text Document to Index:</label>
+		</div>
 
-		<label>Load from File:</label>
-		<input id="inputFile" type="file" onchange="inputFile_Changed(this);"></input>
-		<button onclick="buttonTextToIndexClear_Clicked()">Clear</button>
-		<br />
+		<div>
+			<label>Load from File:</label>
+			<input
+				id="inputFile"
+				type="file"
+				onchange="UiEventHandler.inputFile_Changed(this);"
+			></input>
+			<button
+				onclick="UiEventHandler.buttonTextToIndexClear_Clicked()"
+			>
+				Clear
+			</button>
+		</div>
 
-		<label>Title:</label>
-		<br />
-		<input id="inputTitle" style="width:256px" value="[untitled]"></input>
-		<br />
+		<div>
+			<label>Title:</label>
+			<br />
+			<input id="inputTitle" style="width:256px" value="[untitled]"></input>
+		</div>
 
-		<label>Content:</label>
-		<br />
-		<textarea
-			id="textareaTextToIndex"
-			cols="80" rows="10"
-		></textarea>
+		<div>
+			<label>Content:</label>
+			<br />
+			<textarea
+				id="textareaTextToIndex"
+				cols="80" rows="10"
+			></textarea>
+		</div>
+
 	</div>
 
-	<button onclick="buttonGenerate_Clicked();">Generate Index</button>
+	<button
+		onclick="UiEventHandler.buttonGenerate_Clicked();"
+	>
+		Generate Index
+	</button>
 
 	<div>
 		<label>Index Generated:</label>
-		<button onclick="buttonIndexGeneratedClear_Clicked()">Clear</button>
+		<button onclick="UiEventHandler.buttonIndexGeneratedClear_Clicked()">Clear</button>
 		<br />
 		<textarea id="textareaIndex" cols="80" rows="10"></textarea>
 	</div>
 
 	<div>
-		<button onclick="buttonFind_Clicked();">Find</button>
+		<button onclick="UiEventHandler.buttonFind_Clicked();">Find</button>
 		<label>Lines Containing All These Words:</label>
 		<input id="inputWordsToFind" style="width:256px"></input>
 		<br />
@@ -56,356 +76,10 @@
 
 </div>
 
-<script type="text/javascript">
+<script type="text/javascript" src="TextDocument.js"></script>
+<script type="text/javascript" src="TextDocumentIndex.js"></script>
+<script type="text/javascript" src="TextDocumentIndexer.js"></script>
+<script type="text/javascript" src="UiEventHandler.js"></script>
 
-// UI event handlers.
-
-function buttonFind_Clicked()
-{
-	var d = document;
-
-	var textareaIndex = d.getElementById("textareaIndex");
-	var indexAsText = textareaIndex.value;
-	var index = TextDocumentIndex.fromText(indexAsText);
-
-	var inputWordsToFind = d.getElementById("inputWordsToFind");
-	var wordsAsString = inputWordsToFind.value.trim();
-	var wordsToFind = wordsAsString.split(" ").filter(x => x.length > 0);
-
-	var linesContainingWordsAsNumbers =
-		index.findOffsetsOfLinesContainingWords(wordsToFind);
-
-	var textDocument = TextDocument.fromDomDocument(d);
-
-	var linesContainingWords =
-		textDocument.linesForNumbers(linesContainingWordsAsNumbers);
-	var blankLine = "\n\n";
-	var linesContainingWordsAsText =
-		linesContainingWords.join(blankLine);
-
-	var textareaLinesContainingSpecifiedWords =
-		d.getElementById("textareaLinesContainingSpecifiedWords");
-	textareaLinesContainingSpecifiedWords.value = linesContainingWordsAsText;
-}
-
-function buttonGenerate_Clicked()
-{
-	var d = document;
-
-	var textDocumentToIndex = TextDocument.fromDomDocument(d);
-
-	var indexer = new TextDocumentIndexer();
-	var indexGenerated =
-		indexer.indexGenerateForTextDocument(textDocumentToIndex);
-
-	var indexGeneratedAsText = indexGenerated.toText();
-
-	var textareaIndex = d.getElementById("textareaIndex");
-	textareaIndex.value = indexGeneratedAsText;
-}
-
-function buttonIndexGeneratedClear_Clicked()
-{
-	var d = document;
-	var textareaIndex = d.getElementById("textareaIndex");
-	textareaIndex.value = "";
-}
-
-function inputFile_Changed(inputFile)
-{
-	var fileToLoad = inputFile.files[0];
-
-	if (fileToLoad != null)
-	{
-		var fileReader = new FileReader();
-		fileReader.onload = (event) =>
-		{
-			var fileText = event.target.result;
-			var d = document;
-
-			var inputTitle = d.getElementById("inputTitle");
-			inputTitle.value = fileToLoad.name;
-
-			var textareaTextToIndex =
-				d.getElementById("textareaTextToIndex");
-			textareaTextToIndex.value = fileText;
-		};
-		fileReader.readAsText(fileToLoad);
-	}
-}
-
-function buttonTextToIndexClear_Clicked()
-{
-	var d = document;
-
-	var inputFile = d.getElementById("inputFile");
-	inputFile.files.length = 0;
-
-	var inputTitle = d.getElementById("inputTitle");
-	inputTitle.value = "[untitled]";
-
-	var textareaTextToIndex =
-		d.getElementById("textareaTextToIndex");
-	textareaTextToIndex.value = "";
-}
-
-/*
-function textareaTextToIndex_SelectionChanged(textareaTextToIndex)
-{
-	// When implemented, this function is intended to display
-	// the "actual" line number whenever the cursor is moved
-	// within the textarea.
-	alert("todo");
-}
-*/
-
-// Classes.
-
-class TextDocument
-{
-	constructor(title, content)
-	{
-		this.title = title;
-		this.content = content;
-	}
-
-	static fromDomDocument(d)
-	{
-		var inputTitle = d.getElementById("inputTitle");
-		var title = inputTitle.value;
-		var textareaTextToIndex = d.getElementById("textareaTextToIndex");
-		var textToIndex = textareaTextToIndex.value;
-
-		var textDocument = new TextDocument(title, textToIndex);
-
-		return textDocument;
-	}
-
-	linesForNumbers(lineNumbers)
-	{
-		var newline = "\n";
-		var linesAll = this.content.split(newline);
-		var linesSelected = lineNumbers.map(x => linesAll[x]);
-		return linesSelected;
-	}
-}
-
-class TextDocumentIndex
-{
-	constructor(documentTitle, lineAndCharOffsetPairsByWord)
-	{
-		this.documentTitle = documentTitle;
-		this.lineAndCharOffsetPairsByWord = lineAndCharOffsetPairsByWord;
-	}
-
-	findOffsetsOfLinesContainingWords(wordsToFind)
-	{
-		var offsetsOfLinesContainingEachWord =
-			wordsToFind.map(
-				word =>
-					this.lineAndCharOffsetPairsByWord.get(word).map(x => x[0] )
-			);
-
-		var offsetsOfLinesContainingAllWordsSoFar =
-			offsetsOfLinesContainingEachWord[0] || [];
-
-		for (var i = 1; i < wordsToFind.length; i++)
-		{
-			var wordCurrent = wordsToFind[i];
-			var lineOffsetsForWordCurrent =
-				offsetsOfLinesContainingEachWord[i];
-			offsetsOfLinesContainingAllWordsSoFar =
-				offsetsOfLinesContainingAllWordsSoFar
-					.filter(x => lineOffsetsForWordCurrent.indexOf(x) >= 0 );
-		}
-
-		return offsetsOfLinesContainingAllWordsSoFar;
-	}
-
-	// To and from text.
-
-	static fromText(indexAsText)
-	{
-		var blankLine = "\n\n";
-		var wordEntriesAsStrings = indexAsText.split(blankLine);
-
-		var wordsAndLineAndCharOffsetPairs = wordEntriesAsStrings.map
-		(
-			wordEntryAsString =>
-			{
-				var indexOfFirstSpace = wordEntryAsString.indexOf(" ");
-				var word = wordEntryAsString.substr(0, indexOfFirstSpace);
-				var lineAndCharOffsetPairsAsString =
-					wordEntryAsString.substr(indexOfFirstSpace);
-				var lineAndCharOffsetPairsAsStrings =
-					lineAndCharOffsetPairsAsString.split(", ");
-				var lineAndCharOffsetPairs = lineAndCharOffsetPairsAsStrings.map
-				(
-					lineAndCharOffsetAsString =>
-						lineAndCharOffsetAsString.split(":").map(x => parseInt(x) )
-				);
-				var wordAndLineAndCharOffsetPairs = [word, lineAndCharOffsetPairs];
-				return wordAndLineAndCharOffsetPairs
-			}
-		);
-
-		var lineAndCharOffsetPairsByWord =
-			new Map(wordsAndLineAndCharOffsetPairs);
-
-		var index = new TextDocumentIndex
-		(
-			"[unknown]", // title
-			lineAndCharOffsetPairsByWord
-		);
-
-		return index;
-	}
-
-	toText()
-	{
-		var linesSoFar = [];
-
-		var wordsAsEnumeration = this.lineAndCharOffsetPairsByWord.keys();
-		while (true)
-		{
-			var enumerationResult = wordsAsEnumeration.next();
-			if (enumerationResult.done)
-			{
-				break;
-			}
-			else
-			{
-				var word = enumerationResult.value;
-
-				var lineAndCharOffsetPairsForWord =
-					this.lineAndCharOffsetPairsByWord.get(word);
-
-				var lineAndCharOffsetPairsForWordAsText =
-					lineAndCharOffsetPairsForWord.map(
-						x => x[0] + ":" + x[1]
-					).join(", ");
-
-				linesSoFar.push(word + " " + lineAndCharOffsetPairsForWordAsText);
-			}
-		}
-
-		var blankLine = "\n\n";
-		var indexAsText = linesSoFar.join(blankLine);
-
-		return indexAsText;
-	}
-}
-
-class TextDocumentIndexer
-{
-	indexGenerateForTextDocument(textDocumentToIndex)
-	{
-		var textAsLinesOfWords =
-			this.indexGenerateForTextDocument_1(textDocumentToIndex);
-
-		var lineAndCharOffsetPairsByWord =
-			this.indexGenerateForTextDocument_2(textAsLinesOfWords);
-
-		var lineAndCharOffsetPairsByWordSorted =
-			new Map( [...lineAndCharOffsetPairsByWord.entries() ].sort() );
-
-		var textDocumentIndex = new TextDocumentIndex
-		(
-			textDocumentToIndex.title,
-			lineAndCharOffsetPairsByWordSorted
-		);
-
-		return textDocumentIndex;
-	}
-
-	indexGenerateForTextDocument_1(textDocumentToIndex)
-	{
-		var textToIndex = textDocumentToIndex.content;
-
-		var textLowercase = textToIndex.toLowerCase();
-
-		var newline = "\n";
-		var textAsLines = textLowercase.split(newline);
-		var textAsLinesTrimmed = textAsLines.map(x => x.trim());
-
-		var textAsLinesOfTokens = textAsLinesTrimmed.map(x => x.split(" "));
-
-		var charCode_A = "A".charCodeAt(0);
-		var charCode_Z = "Z".charCodeAt(0);
-		var charCode_a = "a".charCodeAt(0);
-		var charCode_z = "z".charCodeAt(0);
- 
-		var textAsLinesOfWords = textAsLinesOfTokens.map
-		(
-			tokensOnLine =>
-			{
-				var wordsOnLine = tokensOnLine.map
-				(
-					token =>
-					{
-						var tokenLetters = token.split("").filter
-						(
-							character =>
-							{
-								var charCode = character.charCodeAt(0);
-								var isCharALetter =
-								(
-									(
-										charCode >= charCode_A
-										&& charCode <= charCode_Z
-									)
-									||
-									(
-										charCode >= charCode_a
-										&& charCode <= charCode_z
-									)
-								);
-								return isCharALetter;
-							}
-						);
-
-						var tokenMinusNonLetters = tokenLetters.join("");
-
-						return tokenMinusNonLetters;
-					}
-				).filter(x => x.length > 0);
-
-				return wordsOnLine;
-			}
-		);
-
-		return textAsLinesOfWords;
-	}
-
-	indexGenerateForTextDocument_2(textAsLinesOfWords)
-	{
-		var lineAndCharOffsetPairsByWord = new Map();
-
-		for (var i = 0; i < textAsLinesOfWords.length; i++)
-		{
-			var wordsOnLine = textAsLinesOfWords[i];
-
-			for (var w = 0; w < wordsOnLine.length; w++)
-			{
-				var word = wordsOnLine[w];
-
-				if (lineAndCharOffsetPairsByWord.has(word) == false)
-				{
-					lineAndCharOffsetPairsByWord.set(word, []);
-				}
-
-				var lineAndCharOffsetPairsForWord
-					= lineAndCharOffsetPairsByWord.get(word);
-
-				lineAndCharOffsetPairsForWord.push( [i, w ] );
-			}
-		}
-
-		return lineAndCharOffsetPairsByWord;
-	}
-
-}
-
-</script>
 </body>
 </html>
