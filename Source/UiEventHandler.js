@@ -18,15 +18,72 @@ class UiEventHandler
 
 		var textDocument = TextDocument.fromDomDocument(d);
 
-		var linesContainingWords =
-			textDocument.linesForNumbers(linesContainingWordsAsNumbers);
-		var blankLine = "\n\n";
-		var linesContainingWordsAsText =
-			linesContainingWords.join(blankLine);
+		var selectIndexType =
+			d.getElementById("selectIndexType");
+		var indexTypeName = selectIndexType.value;
+
+		var searchResults = "[No matches found.]";
+
+		if (indexTypeName == "Full Text")
+		{
+			var linesContainingWords =
+				textDocument.linesForNumbers(linesContainingWordsAsNumbers);
+
+			var blankLine = "\n\n";
+			var linesContainingWordsAsText =
+				linesContainingWords.join(blankLine);
+
+			searchResults = linesContainingWordsAsText;
+		}
+		else
+		{
+			var textIndexed = textDocument.content; // todo - Read partially from file?
+			var newline = "\n";
+			var textIndexedAsLines = textIndexed.split(newline);
+
+			var articlesMatchingAsLinesSoFar = [];
+
+			var lineNumbersOfMatchingArticleTitles = linesContainingWordsAsNumbers;
+
+			for (var i = 0; i < lineNumbersOfMatchingArticleTitles.length; i++)
+			{
+				var articleLinesSoFar = [];
+
+				var lineNumber =
+					lineNumbersOfMatchingArticleTitles[i];
+
+				var linesBlankInARowSoFar = 0;
+				while (lineNumber < textIndexedAsLines.length && linesBlankInARowSoFar < 2)
+				{
+					var line = textIndexedAsLines[lineNumber];
+					if (line == "")
+					{
+						linesBlankInARowSoFar++;
+					}
+					else
+					{
+						linesBlankInARowSoFar = 0;
+
+						articleLinesSoFar.push(line);
+					}
+
+					lineNumber++;
+				}
+
+				articlesMatchingAsLinesSoFar.push(...articleLinesSoFar);
+			}
+
+			var newline = "\n";
+			var articlesMatchingAsText =
+				articlesMatchingAsLinesSoFar.join(newline);
+
+			searchResults = articlesMatchingAsText;
+		}
 
 		var textareaLinesContainingSpecifiedWords =
 			d.getElementById("textareaLinesContainingSpecifiedWords");
-		textareaLinesContainingSpecifiedWords.value = linesContainingWordsAsText;
+
+		textareaLinesContainingSpecifiedWords.value = searchResults;
 	}
 
 	static buttonGenerate_Clicked()
@@ -35,7 +92,11 @@ class UiEventHandler
 
 		var textDocumentToIndex = TextDocument.fromDomDocument(d);
 
-		var indexer = new TextDocumentIndexer();
+		var selectIndexType =
+			d.getElementById("selectIndexType");
+		var indexTypeName = selectIndexType.value;
+
+		var indexer = new TextDocumentIndexer(indexTypeName);
 		var indexGenerated =
 			indexer.indexGenerateForTextDocument(textDocumentToIndex);
 

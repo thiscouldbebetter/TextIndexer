@@ -91,7 +91,7 @@ class TextDocumentIndex
 
 				var lineAndCharOffsetPairsForWordAsText =
 					lineAndCharOffsetPairsForWord.map(
-						x => x[0] + ":" + x[1]
+						x => x[0] + (x.length != 2 ? "" : ":" + x[1])
 					).join(", ");
 
 				linesSoFar.push(word + " " + lineAndCharOffsetPairsForWordAsText);

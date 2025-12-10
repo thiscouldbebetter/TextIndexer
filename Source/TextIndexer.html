@@ -9,8 +9,10 @@
 		Load or paste a text document, then click the Generate Index button.
 		Once the index is generated, enter search terms and click the Find button
 		to locate lines that contain all the specified search terms.  A sample
-		text document is provided
-		<a href="../Data/Holy_Bible,_The-King_James_Version.txt">at this link</a>.
+		text document intended for the "Full Text" index type is provided
+		<a href="../Data/Holy_Bible,_The-King_James_Version.txt">at this link</a>,
+		whereas one intended for the "Article Titles" index type is provided
+		<a href="../Data/Webster's_Unabridged_Dictionary-1913-A.txt">at this link</a>.
 	</p>
 
 	<div>
@@ -49,28 +51,45 @@
 
 	</div>
 
-	<button
-		onclick="UiEventHandler.buttonGenerate_Clicked();"
-	>
-		Generate Index
-	</button>
+	<div>
+		<label>Index Type:</label>
+		<select
+			id="selectIndexType"
+		>
+			<option>Full Text</option>
+			<option>Article Titles</option>
+		</select>
+	</div>
+
+	<div>
+		<button
+			onclick="UiEventHandler.buttonGenerate_Clicked();"
+		>
+			Generate Index
+		</button>
+	</div>
 
 	<div>
 		<label>Index Generated:</label>
 		<button onclick="UiEventHandler.buttonIndexGeneratedClear_Clicked()">Clear</button>
 		<br />
-		<textarea id="textareaIndex" cols="80" rows="10"></textarea>
+		<textarea
+			id="textareaIndex"
+			cols="80" rows="10"
+			readonly="true"
+		></textarea>
 	</div>
 
 	<div>
 		<button onclick="UiEventHandler.buttonFind_Clicked();">Find</button>
-		<label>Lines Containing All These Words:</label>
+		<label>Lines/Articles with Titles Containing All These Words:</label>
 		<input id="inputWordsToFind" style="width:256px"></input>
 		<br />
 		<textarea
 			id="textareaLinesContainingSpecifiedWords"
 			cols="80"
 			rows="10"
+			readonly="true"
 		></textarea>
 	</div>
 
